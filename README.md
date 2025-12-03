@@ -1,0 +1,1 @@
+This device fetches temp and forecast from Smhi.se. It the displays it on an epaper module. Uses a ESP32S3 as it's brain.
