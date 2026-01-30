@@ -1,1 +1,2 @@
 This device fetches temp and forecast from Smhi.se. It the displays it on an epaper module. Uses a ESP32S3 as it's brain.
+For now it shows temperature and forecast, screen updates each 3 minutes (minimum update interval to not ruin the display).

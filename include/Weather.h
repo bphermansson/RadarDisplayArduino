@@ -12,4 +12,5 @@ public:
 
     Weather();
     void print() const;
+    void printepaper() const;
 };
