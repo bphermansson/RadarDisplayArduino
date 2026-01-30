@@ -1,7 +1,3 @@
-    http.begin(smhi_temp_url);
-
-    http.begin(smhi_forecast_url);
-
 #include "WeatherFetcher.h"
 #include <Arduino.h>
 #include <WiFi.h>
@@ -14,10 +10,9 @@ const char* YR_USER_AGENT = "MyWeatherApp/1.0 github.com/yourusername/yourapp";
 void fetchWeather(Weather &out) {
     WiFiClient client;
     HTTPClient http;
-    
-    // Yr.no API endpoint (ersätt lat/lon med din position)
-    // Uddevalla ungefär: lat=58.35, lon=11.93
-    String url = "https://api.met.no/weatherapi/locationforecast/2.0/compact?lat=58.35&lon=11.93";
+
+    String url = "https://api.met.no/weatherapi/locationforecast/2.0/compact?lat="
+    + LATITUDE + "&lon=" + LONGITUDE;
     
     http.begin(url);
     http.addHeader("User-Agent", YR_USER_AGENT);
