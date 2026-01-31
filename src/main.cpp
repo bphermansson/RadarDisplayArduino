@@ -2,12 +2,13 @@
 #include <WiFi.h>
 #include "Weather.h"
 #include "WeatherFetcher.h"
-#include "AppSettings.h"
 #include "epaper.h"
 
 Weather currentWeather;   
 unsigned long startTime;
 const unsigned long waitMs = 10 * 60 * 1000UL; // 3 minuter
+const char *ssid = WIFI_SSID;
+const char *password = WIFI_PASSWORD;
 
 void setup() {
     Serial.begin(115200);
@@ -25,7 +26,7 @@ void setup() {
     fetchWeather(currentWeather);
     startTime = millis();
     clearScreen();
-    currentWeather.print();
+    currentWeather.printserial();
     currentWeather.printepaper();
 }
 
@@ -34,7 +35,7 @@ void loop() {
     Serial.println("3 minuter har passerat!");
     startTime = millis(); 
     fetchWeather(currentWeather);
-    currentWeather.print();
+    currentWeather.printserial();
     currentWeather.printepaper();
   }
 }

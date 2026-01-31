@@ -7,7 +7,7 @@ Weather::Weather() {
     forecast = "";
 }
 
-void Weather::print() const {
+void Weather::printserial() const {
     Serial.print("Temperature: ");
     Serial.print(temperature);
     Serial.print(" °C, Forecast: ");

@@ -1,5 +1,4 @@
 #pragma once
-#include "AppSettings.h"
 
 
 class Radar {

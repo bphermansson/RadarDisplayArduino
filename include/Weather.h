@@ -1,6 +1,5 @@
 #pragma once
 #include <string>
-#include "AppSettings.h"
 #include <HTTPClient.h>
 #include <ArduinoJson.h>
 #include <Arduino.h> // for String
@@ -11,6 +10,6 @@ public:
     String forecast;   // e.g. "Sunny", "Rain"
 
     Weather();
-    void print() const;
+    void printserial() const;
     void printepaper() const;
 };

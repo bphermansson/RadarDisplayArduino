@@ -4,16 +4,17 @@
 #include <HTTPClient.h>
 #include <ArduinoJson.h>
 
-// Yr.no kräver User-Agent header
-const char* YR_USER_AGENT = "MyWeatherApp/1.0 github.com/yourusername/yourapp";
+const char* YR_USER_AGENT = "MyWeatherApp/1.0 github.com/bphermansson/RadarDisplayArduino";
 
 void fetchWeather(Weather &out) {
     WiFiClient client;
     HTTPClient http;
 
-    String url = "https://api.met.no/weatherapi/locationforecast/2.0/compact?lat="
-    + LATITUDE + "&lon=" + LONGITUDE;
-    
+    char url[150];
+    snprintf(url, sizeof(url), 
+    "https://api.met.no/weatherapi/locationforecast/2.0/compact?lat=%.2f&lon=%.2f",
+    LATITUDE, LONGITUDE);
+
     http.begin(url);
     http.addHeader("User-Agent", YR_USER_AGENT);
     
