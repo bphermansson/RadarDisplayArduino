@@ -6,7 +6,8 @@
 
 Weather currentWeather;   
 unsigned long startTime;
-const unsigned long waitMs = 10 * 60 * 1000UL; // 3 minuter
+const unsigned long waitMsClock = 1 * 60 * 1000UL; 
+int updateCounter = 0;
 const char *ssid = WIFI_SSID;
 const char *password = WIFI_PASSWORD;
 
@@ -22,21 +23,32 @@ void setup() {
         Serial.print(".");
     }
     Serial.println("\nConnected!");
-    InitialiseDisplay();
+    initialiseDisplay();
     fetchWeather(currentWeather);
     startTime = millis();
-    clearScreen();
     currentWeather.printserial();
-    currentWeather.printepaper();
+    uint8_t x = 30;
+    uint8_t y = 30;
+    uint8_t w = 200;
+    uint8_t h = 30;
+    String text = "Ute: " + String(currentWeather.temperature) + " C" ;
+    partialRefresh(x, y, w, h, 3, 24, text);
 }
 
 void loop() {
-  if (millis() - startTime >= waitMs) {
-    Serial.println("3 minuter har passerat!");
+  if (millis() - startTime >= waitMsClock) {
+    Serial.println("1 minut har passerat!");
     startTime = millis(); 
     fetchWeather(currentWeather);
     currentWeather.printserial();
-    currentWeather.printepaper();
+
+uint8_t x = 30;
+    uint8_t y = 30;
+    uint8_t w = 200;
+    uint8_t h = 30;
+    String text = "Ute: " + String(currentWeather.temperature) + " C" ;
+    partialRefresh(x, y, w, h, 3, 24, text);
+
   }
 }
 

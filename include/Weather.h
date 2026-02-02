@@ -11,5 +11,4 @@ public:
 
     Weather();
     void printserial() const;
-    void printepaper() const;
 };
