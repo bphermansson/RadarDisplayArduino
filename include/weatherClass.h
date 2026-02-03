@@ -6,9 +6,10 @@
 
 class Weather {
 public:
-    int temperature;   // degrees Celsius
+    float temperature;   // degrees Celsius
     String forecast;   // e.g. "Sunny", "Rain"
 
     Weather();
     void printserial() const;
+    String getSwedishForecast();
 };

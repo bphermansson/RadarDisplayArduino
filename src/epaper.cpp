@@ -5,6 +5,7 @@
 #include "epaper.h"
 
 // Display type
+// Here WeAct 2,13" BW 250x122px.
 GxEPD2_3C<GxEPD2_213_Z98c, GxEPD2_213_Z98c::HEIGHT> display(
     GxEPD2_213_Z98c(/*CS=*/ EPD_CS, /*DC=*/ EPD_DC, /*RST=*/ EPD_RST, /*BUSY=*/ EPD_BUSY)
 );
