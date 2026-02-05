@@ -4,12 +4,10 @@
 #include "WeatherFetcher.h"
 #include "epaper.h"
 #include "timeClass.h"
-#include <constructPackage.h>
 #include <definitions.h>
-#include <printRunModeData.h>
-#include <bridgeSerial.h>
 #include <HardwareSerial.h>
 #include <blinkStrip.h>
+#include "LD2420.h"
 
 Weather currentWeather;   
 Time timeObj;
@@ -22,10 +20,14 @@ bool firstRun = true;
 int updateCounter = 0;
 const char *ssid = WIFI_SSID;
 const char *password = WIFI_PASSWORD;
-uint32_t lastReading = 0;
-bool radarConnected = false;
-extern HardwareSerial mySerial(2);  // Use UART2 (TX2/RX2)
-extern byte sysModeParam = 0x00;
+extern HardwareSerial mySerial(2); 
+LD2420 radar;  // Use default constructor
+
+// Track last distance to detect changes
+int lastDistance = -1;
+int detectionTime = 0;
+bool wasDetecting = false;
+bool newDetection = false;
 
 void setup() {
     Serial.begin(115200);
@@ -43,12 +45,21 @@ void setup() {
     timeObj.initTime();
     FastLED.addLeds<LED_TYPE_S, LED_PIN_S, COLOR_ORDER_S>(leds_s, NUM_LEDS_S).setCorrection(TypicalLEDStrip);
 
-    mySerial.begin(115200, SERIAL_8N1, RX_PORT, RADAR_OT1_PIN);  
-    Serial.println("HLK-LD2420 Initialized");
-    pinMode(RADAR_OT1_PIN, INPUT);   
-    pinMode(RADAR_OT2_PIN, INPUT); 
-    sendCommand(sysMode(RUN_MODE)); 
-    getCommandResponse();
+    // Initialize SSerial for LD2420
+    mySerial.begin(115200, SERIAL_8N1, RX_PORT, RADAR_OT1_PIN);  // HLK-LD2420 baud rate (256000), RX2=16, TX2=17
+    
+    // Initialize the radar sensor
+    if (radar.begin(mySerial)) {
+      Serial.println("Radar ready. Waiting for motion...");
+    } else {
+      Serial.println("Failed to initialize radar!");
+      while (1) delay(1000);
+    }
+    
+    // Configure sensor
+    radar.setDistanceRange(100, 600);
+    radar.setUpdateInterval(50); // 20Hz update rate
+
     blink();
 }
 
@@ -82,9 +93,40 @@ void loop() {
     partialRefresh(110, 100, 200, 25, 2, 18, dateText);
      } 
     // Radar
-    if (sysModeParam == RUN_MODE) {
-      printRunModeData();
-    } else {
-      bridgeSerial();
-    }
+    radar.update();  // Update radar readings
+    
+    // Check if motion is detected
+    bool isDetecting = radar.isDetecting();
+    int currentDistance = radar.getDistance();
+    
+    if (isDetecting) {
+      if (newDetection == false) {
+        Serial.println("Motion detected");
+        newDetection = true;
+      } 
+      // Only print when distance changes
+      if (currentDistance != lastDistance) {
+        Serial.print("Motion detected at ");
+        Serial.print(currentDistance);
+        Serial.println("cm");
+        if (detectionTime - 10000 < 0) {
+          detectionTime=millis();
+          blink();
+        }
+        
+        
+        lastDistance = currentDistance;
+        wasDetecting = true;
+      }
+     } //else {
+    //   // Motion stopped - reset for next detection
+    //   if (wasDetecting) {
+    //     Serial.print("Motion stopped ");
+    //     lastDistance = -1;
+    //     wasDetecting = false;
+    //     newDetection = false;
+    //   }
+    // }
+
+
 }
