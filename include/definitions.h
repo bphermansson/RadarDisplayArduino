@@ -1,0 +1,39 @@
+//Setup trigger and hold commands translation
+#define TRIGGER_0 0x10
+#define TRIGGER_1 0x11
+#define TRIGGER_2 0x12
+#define TRIGGER_3 0x13
+#define TRIGGER_4 0x14
+#define TRIGGER_5 0x15
+#define TRIGGER_6 0x16
+#define TRIGGER_7 0x17
+#define TRIGGER_8 0x18
+#define TRIGGER_9 0x19
+#define TRIGGER_10 0x1A
+#define TRIGGER_11 0x1B
+#define TRIGGER_12 0x1C
+#define TRIGGER_13 0x1D
+#define TRIGGER_14 0x1E
+#define TRIGGER_15 0x1F
+
+#define HOLD_0 0x20
+#define HOLD_1 0x21
+#define HOLD_2 0x22
+#define HOLD_3 0x23
+#define HOLD_4 0x24
+#define HOLD_5 0X25
+#define HOLD_6 0x26
+#define HOLD_7 0x27
+#define HOLD_8 0x28
+#define HOLD_9 0x29
+#define HOLD_10 0x2A
+#define HOLD_11 0x2B
+#define HOLD_12 0x2C
+#define HOLD_13 0x2D
+#define HOLD_14 0x2E
+#define HOLD_15 0x2F
+
+//Setup module sysModes
+#define DEBUG_MODE 0x00
+#define REPORT_MODE 0x04
+#define RUN_MODE 0x64
