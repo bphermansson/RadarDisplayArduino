@@ -1,2 +1,8 @@
-This device fetches temp and forecast from Smhi.se. It the displays it on an epaper module. Uses a ESP32S3 as it's brain.
-For now it shows temperature and forecast, screen updates each 3 minutes (minimum update interval to not ruin the display).
+This device fetches temp and forecast from yr.no and time from a ntp-server. It the displays it on an epaper module, using a ESP32S3 as it's brain (but can use other ESP32-based boards as well).
+It also uses a LD2420 precense detector and a RGB-ledstrip. The purpose of this is to work as a warning system. If someone enters the room, the ledstrip flashes.
+All settings are made in platform.ini, except Wifi password. For this you have to create a file "private_settings.ini" with this content:
+```
+[env]
+build_flags =
+    -DWIFI_PASSWORD=\"<Wifi password>\"
+```
