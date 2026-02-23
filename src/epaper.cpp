@@ -13,6 +13,14 @@ GxEPD2_3C<GxEPD2_213_Z98c, GxEPD2_213_Z98c::HEIGHT> display(
 U8G2_FOR_ADAFRUIT_GFX u8g2Fonts; // Select u8g2 font from here: https://github.com/olikraus/u8g2/wiki/fntlistall
 
 void initialiseDisplay() {
+  // Ensure control/SPI pins are configured before the display driver toggles them.
+  pinMode(EPD_CS, OUTPUT);
+  pinMode(EPD_DC, OUTPUT);
+  pinMode(EPD_RST, OUTPUT);
+  pinMode(EPD_BUSY, INPUT);
+  pinMode(EPD_SCK, OUTPUT);
+  pinMode(EPD_MOSI, OUTPUT);
+
   display.init(115200, true, 2, false);
   SPI.end();
   SPI.begin(EPD_SCK, EPD_MISO, EPD_MOSI, EPD_CS);

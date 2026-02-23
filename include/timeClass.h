@@ -7,6 +7,7 @@ public:
   void initTime();
   void localTime();
   String getTimeString();
+  String getHourString();
   String getDateString(); 
   String getWeekdayString(); 
 };

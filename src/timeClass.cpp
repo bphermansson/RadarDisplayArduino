@@ -37,6 +37,18 @@ String Time::getTimeString() {
   return String(buffer);
 }
 
+String Time::getHourString() {
+  struct tm timeinfo;
+  
+  if(!getLocalTime(&timeinfo)){
+    return "??";
+  }
+  
+  char buffer[6];
+  snprintf(buffer, 3, "%02d", timeinfo.tm_hour);
+  return String(buffer);
+}
+
 String Time::getDateString() {
   struct tm timeinfo;
   

@@ -17,20 +17,17 @@ const unsigned long waitMs = 15 * 60 * 1000UL;
 const unsigned long waitMsClock = 1 * 60 * 1000UL; 
 bool firstRunClock = true;
 bool firstRun = true;
+bool detecting = false;
+int updateState = 0;
+int lastDistance = -1;
+const unsigned long RADAR_STALE_TIMEOUT_MS = 500;
+const unsigned long MOTION_IDLE_TIMEOUT_MS = 10000;
+unsigned long lastDistanceChangeAt = 0;
 int updateCounter = 0;
 const char *ssid = WIFI_SSID;
 const char *password = WIFI_PASSWORD;
 extern HardwareSerial mySerial(2); 
 LD2420 radar;  // Use default constructor
-
-// Track last distance to detect changes
-int lastDistance = -1;
-bool wasDetecting = false;
-const unsigned long RADAR_STALE_TIMEOUT_MS = 500;
-const unsigned long MOTION_CONFIRM_MS = 400;
-const unsigned long NO_MOTION_CONFIRM_MS = 400;
-unsigned long motionCandidateSince = 0;
-unsigned long noMotionSince = 0;
 
 void setup() {
     Serial.begin(115200);
@@ -49,7 +46,7 @@ void setup() {
     FastLED.addLeds<LED_TYPE_S, LED_PIN_S, COLOR_ORDER_S>(leds_s, NUM_LEDS_S).setCorrection(TypicalLEDStrip);
 
     // Initialize Serial for LD2420
-    mySerial.begin(115200, SERIAL_8N1, RX_PORT, RADAR_OT1_PIN);  // HLK-LD2420 baud rate (256000), RX2=16, TX2=17
+    mySerial.begin(115200, SERIAL_8N1, RADAR_UART_RX_PIN, RADAR_UART_TX_PIN);  // LD2420 TX -> ESP RX, LD2420 RX <- ESP TX
     
     // Initialize the radar sensor
     if (radar.begin(mySerial)) {
@@ -61,7 +58,7 @@ void setup() {
     
     // Configure sensor
     radar.setDistanceRange(MIN_RANGE, MAX_RANGE);
-    radar.setUpdateInterval(50); // 20Hz update rate
+    radar.setUpdateInterval(10); // 20Hz update rate
 
     blink();
 }
@@ -74,75 +71,112 @@ void loop() {
     String timeText = timeObj.getTimeString();
     partialRefresh(130, 8, 110, 35, 4, 32, timeText);
   }
-  if (millis() - startTime >= waitMs || firstRun) {
+  bool inFullUpdate = false;
+
+  if (millis() - startTime >= waitMs || firstRun || updateState > 0  ) {
     firstRun = false;
     startTime = millis(); 
-    fetchWeather(currentWeather);
-    currentWeather.printserial();
-
-    String tempText = String(currentWeather.temperature,1) + "°C";
-    partialRefresh(8, 8, 130, 35, 4, 32, tempText);
-
-    String timeText = String(timeObj.getTimeString());
-    partialRefresh(130, 8, 110, 35, 4, 32, timeText);
-
-    String forecastText = currentWeather.getSwedishForecast();
-    partialRefresh(10, 65, 200, 25, 2, 18, forecastText);
-
-    String weekDayText = timeObj.getWeekdayString();
-    partialRefresh(10, 100, 200, 25, 2, 18, weekDayText);
-
-    String dateText = timeObj.getDateString();
-    partialRefresh(110, 100, 200, 25, 2, 18, dateText);
-     } 
-    // Radar
-    radar.update();  // Update radar readings
     
-    // Treat stale radar data as no detection so stop events are emitted.
-    const unsigned long now = millis();
-    const bool hasFreshData = radar.isDataValid() &&
-                              (now - radar.getLastUpdateTime() <= RADAR_STALE_TIMEOUT_MS);
-    const bool rawDetecting = hasFreshData && radar.isDetecting();
-    int currentDistance = radar.getDistance();
-
-    if (rawDetecting) {
-      noMotionSince = 0;
-      if (motionCandidateSince == 0) {
-        motionCandidateSince = now;
-      }
-    } else {
-      motionCandidateSince = 0;
-      if (noMotionSince == 0) {
-        noMotionSince = now;
-      }
+    fetchWeather(currentWeather);
+    //currentWeather.printserial();
+    switch (updateState)
+    {
+    case 0: {
+      Serial.println("Starting full update... this may take a moment." );
+      inFullUpdate = true;
+      String tempText = String(currentWeather.temperature,1) + "°C";
+      partialRefresh(8, 8, 130, 35, 4, 32, tempText);
+      updateState++;
+      Serial.println(updateState);
+      break;
     }
-
-    bool isDetecting = wasDetecting;
-    if (!wasDetecting) {
-      if (rawDetecting && (now - motionCandidateSince >= MOTION_CONFIRM_MS)) {
-        isDetecting = true;
-      }
-    } else {
-      if (!rawDetecting && (now - noMotionSince >= NO_MOTION_CONFIRM_MS)) {
-        isDetecting = false;
-      }
+    case 1: {
+      Serial.println("Step 1 done, updating temp..." );
+      String tempText = String(currentWeather.temperature,1) + "°C";
+      partialRefresh(8, 8, 130, 35, 4, 32, tempText);
+      updateState++;
+      break;
     }
+    case 2: {
+      Serial.println("Step 2 done, updating time..." );
+      String timeText = String(timeObj.getTimeString());
+      partialRefresh(130, 8, 110, 35, 4, 32, timeText);
+      updateState++;
+      break;
+    }
+    case 3: {
+      Serial.println("Step 3 done, updating forecast..." );
+      String forecastText = currentWeather.getSwedishForecast();
+      partialRefresh(10, 65, 200, 25, 2, 18, forecastText);
+      updateState++;
+      break;  
+    }
+    case 4: {
+      Serial.println("Step 4 done, updating weekday..." );
+      String weekDayText = timeObj.getWeekdayString();
+      partialRefresh(10, 100, 200, 25, 2, 18, weekDayText);
+      updateState++;
+      break;
+    }
+    case 5: {
+      Serial.println("Step 5 done, updating date..." );
+      String dateText = timeObj.getDateString();
+      partialRefresh(110, 100, 200, 25, 2, 18, dateText);
+      updateState++;
+      break;  
+    }
+    case 6: {
+      Serial.println("Full update done." );
+      inFullUpdate = false;
+      updateState = 0;
+      break;  
+    }
+    default:
+      break;
+    }
+  } 
 
-    if (isDetecting && !wasDetecting) {
-      Serial.println("Motion detected");
-      blink();
-    } else if (!isDetecting && wasDetecting) {
+  const unsigned long now = millis();
+  
+  // Radar
+  radar.update();  // Update radar readings
+  const bool hasFreshData = radar.isDataValid() &&
+                            (now - radar.getLastUpdateTime() <= RADAR_STALE_TIMEOUT_MS);
+  const bool isDetectingNow = hasFreshData && radar.isDetecting();
+
+  if (isDetectingNow) {
+    if (isDetectingNow && radar.getDistance() != lastDistance) {  
+      if (!detecting) {
+        Serial.println("Motion detected");
+        detecting = true;
+        if(timeObj.getHourString().toInt() >= DND_START || timeObj.getHourString().toInt() < DND_END){
+          Serial.println("DND active, not blinking");
+        }
+        else {
+          blink();
+        }
+      }
+      String timestamp = timeObj.getDateString() + " " + timeObj.getTimeString();
+      Serial.print("[");
+      Serial.print(timestamp);
+      Serial.print("] Motion detected at ");
+      Serial.print(radar.getDistance());
+      Serial.println("cm");
+      lastDistance = radar.getDistance();
+      lastDistanceChangeAt = now;
+    }   
+
+    if (detecting && lastDistanceChangeAt > 0 &&
+        (now - lastDistanceChangeAt >= MOTION_IDLE_TIMEOUT_MS)) {
       Serial.println("Motion stopped");
+      detecting = false;
       lastDistance = -1;
     }
-
-    // Only print when distance changes while detection is active.
-    if (isDetecting && currentDistance != lastDistance) {
-      Serial.print("Motion detected at ");
-      Serial.print(currentDistance);
-      Serial.println("cm");
-      lastDistance = currentDistance;
-    }
-
-    wasDetecting = isDetecting;
+  }
+  else if (detecting) {
+    Serial.println("Motion stopped");
+    detecting = false;
+    lastDistance = -1;
+    lastDistanceChangeAt = 0;
+  }
 }
